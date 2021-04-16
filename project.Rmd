@@ -1,7 +1,6 @@
 ---
-title: "project"
-author: "Jennifer Xue"
-date: "15/04/2021"
+title: "The Project"
+date: "BDS-516!"
 output: html_document
 ---
 

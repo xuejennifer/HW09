@@ -1,7 +1,7 @@
 name: "Jen's Website"
 output_dir: "."
 navbar:
-  title: "JX"
+  title: "Jennifer Xue"
   left:
     - text: "Home"
       href: index.html
@@ -12,5 +12,5 @@ navbar:
 
 output:
   html_document:
-    theme: simplex
+    theme: spacelab
     highlight: textmate

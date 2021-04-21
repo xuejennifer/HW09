@@ -9,6 +9,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
+<meta name="author" content="This assignment is a collaborative effort among the Electric Eels: Walid Hedidar, Aamia Malik, Michael Murphy, Jon Sirota, Cory Winkler, Jen Xue" />
 
 
 <title>The Project</title>
@@ -304,12 +305,225 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">The Project</h1>
+<h4 class="author">This assignment is a collaborative effort among the Electric Eels: Walid Hedidar, Aamia Malik, Michael Murphy, Jon Sirota, Cory Winkler, Jen Xue</h4>
 <h4 class="date">BDS-516!</h4>
 
 </div>
 
 
+<div id="in-this-report-we-analyze-elon-musks-and-tim-cooks-tweets." class="section level2">
+<h2>In this report, we analyze Elon Musk’s and Tim Cook’s tweets.</h2>
+<p><strong>REARRANGE SECTIONS OF REPORT W/ HYPOTHESIS AND METHODS HERE</strong></p>
+<h2>
+Introduction 2
+</h2>
+<p>For this assignment, we are interested in the tweets between <strong>Elon Musk</strong> and <strong>Tim Cook</strong>. Our main research question is: <em>How do tweets from Elon Musk and Tim Cook differ?</em>. Before starting the research procee, we hypothesized that there will be a large difference in the sentiment of tweets; that is, we postulate than tweets from Elon Musk will incorporate more extreme sentiments that those from Tim Cook. Throughout this report, we will check if that hypothesis is valid or not.</p>
+<h2>
+Methodology 2
+</h2>
+<p>In order to investigate potential differences between the tweets of Elon Musk and Tim Cook, our methodology covered the following:</p>
+<ul>
+<li>Comparing time patterns between the tweets of both accounts. The purpose for this was to gather information about the times of the day during which both accounts tweet the most or the least.<br />
+</li>
+<li>Comparing the number of tweets with or without pictures/links from both accounts. The purpose for this was to understand which account tends to use pictures/link more often.</li>
+<li>Tokenizing the tweets in each account. The purpose for this was to identify differences between popular words tweeted between both accounts and to conduct a sentiment analysis on each sample of tweets.</li>
+</ul>
+<p>For our predictive algortihm, we divided our data into test and train data and trained the algorithm to identify the srouces of the tweet based on the following variables:</p>
+<ul>
+<li>Whether the tweet contained pictures/links</li>
+<li>The hour of the day during which the tweet was published</li>
+<li>a sentiment score using the AFINN dictionary</li>
+</ul>
+<div id="first-we-are-loading-in-the-tweets-from-elon-musk-and-tim-cook-our-two-tweeters-of-interest." class="section level3">
+<h3>First, we are loading in the tweets from Elon Musk and Tim Cook, our two tweeters of interest.</h3>
+<pre class="r"><code>#load data
+setwd(&#39;~/Dropbox/516_Eels/HW_9&#39;)
 
+elon = read_csv(&#39;elonmusk_tweets.csv&#39;)</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   id = col_double(),
+##   source = col_character(),
+##   created_at = col_datetime(format = &quot;&quot;),
+##   favorite_count = col_double(),
+##   retweet_count = col_double(),
+##   text = col_character()
+## )</code></pre>
+<pre class="r"><code>elon$user = &quot;Elon&quot;
+
+cook = read_csv(&#39;tim_cook_tweets.csv&#39;)</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   id = col_double(),
+##   source = col_character(),
+##   created_at = col_datetime(format = &quot;&quot;),
+##   favorite_count = col_double(),
+##   retweet_count = col_double(),
+##   text = col_character()
+## )</code></pre>
+<pre class="r"><code>cook$user = &quot;Tim&quot;
+
+combined &lt;- rbind(elon, cook) #combine data frames
+
+nrc &lt;- read_rds(&quot;nrc.rds&quot;) #rds is native format for r data 
+
+rogan = read_csv(&#39;joerogan_tweets.csv&#39;)</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   id = col_double(),
+##   source = col_character(),
+##   created_at = col_datetime(format = &quot;&quot;),
+##   favorite_count = col_double(),
+##   retweet_count = col_double(),
+##   text = col_character()
+## )</code></pre>
+<pre class="r"><code>rogan$user = &quot;Joe&quot;
+
+siwa = read_csv(&#39;itsjojosiwa_tweets.csv&#39;)</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   id = col_double(),
+##   source = col_character(),
+##   created_at = col_datetime(format = &quot;&quot;),
+##   favorite_count = col_double(),
+##   retweet_count = col_double(),
+##   text = col_character()
+## )</code></pre>
+<pre class="r"><code>siwa$user = &quot;Jojo&quot;</code></pre>
+</div>
+<div id="here-we-want-to-understand-the-differences-in-the-times-of-tweets-between-users." class="section level3">
+<h3>Here, we want to understand the differences in the times of tweets between users.</h3>
+<p>Tim Cook appears to tweet more often in the morning (between 7:00am - 10:00am), whereas Elon is much more likely to tweet in the very early morning / late night (12:00am - 5:00am). Tim’s tweet reach a significant peak toward 9:00am, which is a sign that there are potentially scheduled tweets that go out during that time of the day. <strong>EXPLAIN THE GRAPH’S PEAKS WOULD BE AWESOME</strong></p>
+<pre class="r"><code>#time of day of tweets 
+combined %&gt;%
+  count(user, hour = hour(with_tz(created_at, &quot;EST&quot;))) %&gt;%
+  mutate(percent = n/sum(n)) %&gt;%
+  ggplot(aes(x = hour, y = percent, color = user)) +
+  labs(title = &quot;Percentage of tweets based on time of day&quot;, 
+       x = &quot;Hour of day (EST)&quot;, 
+       y = &quot;% of tweets&quot;, color = &quot;&quot;,
+       fill = &quot;User&quot;) + 
+  scale_y_continuous(labels = scales::percent)+
+  geom_line() + theme_bw()</code></pre>
+<p><img src="project_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+</div>
+<div id="next-we-were-also-interested-in-the-differences-between-users-tweets-when-it-came-to-tweets-that-contained-pictureslinks." class="section level3">
+<h3>Next, we were also interested in the differences between users’ tweets when it came to tweets that contained pictures/links.</h3>
+<p>We find that Tim Cook is much more likely to include a picture or a hyperlink in his tweets. <strong>USE THE FIRST SET OF LINES OF CODE AND ARTICULATE THE EXACT NUMBERS</strong></p>
+<pre class="r"><code>#  Count the number of tweets with and without picture/links by device
+pic_ct &lt;- combined %&gt;%
+  filter(!str_detect(text, &#39;^&quot;&#39;)) %&gt;%
+  count(user,picture = ifelse(str_detect(text, &quot;t.co&quot;),
+                         &quot;Picture/link&quot;, &quot;No picture/link&quot;))
+
+# Make a bar plot 
+ggplot(pic_ct, aes(x = user, y = n, fill = picture)) +
+  geom_bar(stat = &quot;identity&quot;, position = &quot;dodge&quot;) +
+  labs(title = &quot;Tweets with(out) picture/link&quot;, x = &quot;&quot;, y = &quot;Number of tweets&quot;, fill = &quot;&quot;) +
+  theme_bw()</code></pre>
+<p><img src="project_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+</div>
+<div id="this-section-analyses-the-frequency-of-individual-words." class="section level3">
+<h3>This section analyses the frequency of individual words.</h3>
+<p>The first thing we did was create a regex pattern that removed any unwanted symbols/characters.</p>
+<pre class="r"><code># Create a regex pattern
+reg &lt;- &quot;([^A-Za-z\\d#@&#39;]|&#39;(?![A-Za-z\\d#@]))&quot;
+
+# Tokenize
+tweet_txt &lt;- combined %&gt;%
+  filter(!str_detect(text, &#39;^&quot;&#39;)) %&gt;%
+  mutate(text = str_replace_all(text, &quot;@https://t.co/[A-Za-z\\d]+|&amp;amp;&quot;, &quot;&quot;)) %&gt;%
+  unnest_tokens(word, text, token = &quot;regex&quot;, pattern = reg) %&gt;%
+  filter(!word %in% stop_words$word,
+         str_detect(word, &quot;[a-z]&quot;))
+
+tweet_txt &lt;- tweet_txt[!grepl(&quot;@&quot;, tweet_txt$word),]  #the `reg` object wasn&#39;t removing the symbols as desired
+tweet_txt &lt;- tweet_txt[!grepl(&quot;https&quot;, tweet_txt$word),] </code></pre>
+<p>Then, using the newly tokenized dataset, we show the words that occur most often in Elon’s tweets and Tim’s tweets. Unsurprisingly, Elon’s most-tweeted word is <code>Tesla</code>, followed by <code>haha</code> and Tim’s most-tweeted word is <code>Apple</code> and <code>world</code>.</p>
+<pre class="r"><code>tweet_txt %&gt;%
+  group_by(user) %&gt;% 
+  count(word, sort = TRUE) %&gt;%
+  head(40) %&gt;%
+  mutate(word = reorder(word, n)) %&gt;%
+  ggplot(aes(x = word, y = n)) +
+  geom_bar(stat = &quot;identity&quot;, fill = &quot;blue&quot;) + facet_wrap(~user) +
+  ylab(&quot;Occurrences&quot;) + xlab(&quot;Word&quot;) +
+  coord_flip() + theme_bw()</code></pre>
+<p><img src="project_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+</div>
+<div id="now-we-begin-our-sentiment-analysis." class="section level3">
+<h3>Now, we begin our sentiment analysis.</h3>
+<p>We join the NRC dictionary to our data frame that contains the texts of the tweets, into a new data frame called <code>tweet_sentiment</code>. Then we assess each word and calculate a logarithmic ratio comparing the users to determine the difference. We take this log ratio, and plot it: for the words with the largest difference when it comes to being tweeted by either Elon or Tim, the top 15 are all words that coming from Elon.</p>
+<pre class="r"><code>#RATIO TIME
+
+#join nrc first
+tweet_sentiment &lt;- inner_join(tweet_txt, nrc, by = &quot;word&quot;) %&gt;% 
+            group_by(sentiment) %&gt;% head(10)
+
+#ratio of words and plot the ratio
+tweet_ratio &lt;- tweet_txt %&gt;%
+  count(word, user) %&gt;%
+  group_by(word)  %&gt;% 
+  filter(sum(n) &gt;= 5) %&gt;%
+  spread(user, n, fill = 0) %&gt;%
+  ungroup()  %&gt;% 
+  mutate_if(is.numeric, ~((. + 1) / sum(. + 1))) %&gt;% 
+  mutate(logratio = log2(Elon / Tim)) %&gt;% 
+  arrange(desc(logratio))
+
+tweet_ratio %&gt;%
+  top_n(15, abs(logratio)) %&gt;%
+  ungroup() %&gt;%
+  mutate(word = reorder(word, logratio)) %&gt;%
+  ggplot(aes(x = word, y = logratio, fill = logratio &lt; 0)) +
+  geom_bar(stat = &quot;identity&quot;) +
+  coord_flip() +
+  ylab(&quot;Elon / Tim ratio&quot;) +
+  scale_fill_manual(name = &quot;&quot;, labels = c(&quot;Elon&quot;, &quot;Tim&quot;),
+                    values = c(&quot;red&quot;, &quot;lightblue&quot;)) #note it only has elon because the top 15 logratios are all ELon</code></pre>
+<p><img src="project_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<div id="second-we-begin-assessing-words-by-either-positive-or-negative-sentiment." class="section level4">
+<h4>Second, we begin assessing words by either <code>positive</code> or <code>negative</code> sentiment.</h4>
+<p>In general, it appears that Elon’s tweets have a stronger sentiment (i.e. more angry, more sad, more joyful) than Tim’s tweets.</p>
+<p><strong>MORE EXPLANATION/ANNOTATIONS NEEDED BY WHOEVER SAID THEY WERE WRITING! Calling out specific examples would strengthen the explanation.</strong></p>
+<pre class="r"><code># we can&#39;t control the dictionary
+#INDIVIDUAL SENTIMENT TIME
+tweet_sentiment &lt;- tweet_ratio %&gt;%
+  inner_join(nrc, by = &quot;word&quot;) %&gt;%
+  filter(!sentiment %in% c(&quot;positive&quot;, &quot;negative&quot;)) %&gt;%
+  mutate(sentiment = reorder(sentiment, -logratio),
+         word = reorder(word, -logratio)) %&gt;%
+  group_by(sentiment) %&gt;%
+  top_n(15, abs(logratio)) %&gt;%
+  ungroup() 
+
+
+# Plot the log odds ratio of words by user in groups of sentiments
+ggplot(tweet_sentiment, aes(x = word, y = logratio, fill = logratio &lt; 0)) +
+  facet_wrap(~ sentiment, scales = &quot;free&quot;, nrow = 2) +
+  geom_bar(stat = &quot;identity&quot;) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(x = &quot;&quot;, y = &quot;Elon / Tim ratio&quot;) +
+  scale_fill_manual(name = &quot;&quot;, labels = c(&quot;Elon&quot;, &quot;Tim&quot;),
+                    values = c(&quot;red&quot;, &quot;lightblue&quot;))</code></pre>
+<p><img src="project_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>Extract tweets from two famous people who are reasonably different from each other in their views / speech patterns etc. Comparing two of the Kardashians might be tough, but comparing Joe Biden and Kim Kardashian might be more feasible. Ideally you would want a less silly comparison. Two political candidates with opposing views is probably more interesting. You can also try and compare two scientists, two activists, or two celebrities, but try and make this comparison interesting in some way and try to not be disparaging / condescending. We are not trying to develop an algorithm to shame people, after all, they can most definitely do it without our help themselves most of the time.</p>
+<ol style="list-style-type: lower-alpha">
+<li><p><strong>Develop an algorithm</strong> that allows to predict who of the politicians tweeted using just the information in the text of the tweet and the time of the tweets. You are not allowed to use the information about the user. You can use sentiments, individual words, punctuation and anything else as a source of features.</p></li>
+<li><p>Apply the algorithm to new tweets from both users to estimate how well the predictions work. TO DO: Apply algorithm to test data</p></li>
+<li><p>Try the prediction algorithm with a different set of tweets from unrelated users. Discuss how the algorithm works / breaks in this case. TO DO: Use on Joe Rogan data and someone else</p></li>
+</ol>
+<p>a.-c. is group work.</p>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>THIS IS INDIVIDUAL WORK: Present the findings in a website form. Your submission should be just the website link. Make sure you acknowledge the contributions of your team members.</li>
+</ol>
+</div>
+</div>
+</div>
 
 
 

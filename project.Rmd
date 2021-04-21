@@ -67,8 +67,6 @@ combined <- rbind(elon, cook) #combine data frames
 
 nrc <- read_rds("nrc.rds") #rds is native format for r data 
 
----
-  
 rogan = read_csv('joerogan_tweets.csv')
 rogan$user = "Joe"
 

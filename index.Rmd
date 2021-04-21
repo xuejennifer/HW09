@@ -1,11 +1,7 @@
 ---
-title: "Jen's Homework 09 Website"
-author: "Jennifer Xue"
-date: "15/04/2021"
+title: "My cat"
+author: "Something fun to look at, before you look at some hundreds lines of code."
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
+![Ace](/Users/jenniferxue/Desktop/Ace.png)

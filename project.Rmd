@@ -1,12 +1,9 @@
 ---
 title: "The Twitter Analysis: Elon Musk and Tim Cook"
 author: "Electric Eels: Walid Hedidar, Aamia Malik, Michael Murphy, Jon Sirota, Cory Winkler, Jen Xue"
-date: "BDS-516 HW09 - April 25, 2021"
+date: "BDS-516 HW09 | April 25, 2021"
 output: html_document
 ---
-
-
-## In this report, we analyze Elon Musk's and Tim Cook's tweets.
 
 
 <h2> Introduction </h2>

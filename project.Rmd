@@ -4,7 +4,397 @@ date: "BDS-516!"
 output: html_document
 ---
 
+---
+title: "Homework 9"
+author: "This assignment is a collaborative effort among the Electric Eels: Walid Hedidar, Aamia Malik, Michael Murphy, Jon Sirota, Cory Winkler, Jen Xue"
+date: "Apr/25/2021"
+output: html_document
+---
+
+## In this report, we analyze Elon Musk's and Tim Cook's tweets.
+
+**REARRANGE SECTIONS OF REPORT W/ HYPOTHESIS AND METHODS HERE**
+
+<h2> Introduction 2</h2>
+For this assignment, we are interested in the tweets between **Elon Musk** and **Tim Cook**. Our main research question is: *How do tweets from Elon Musk and Tim Cook differ?*. Before starting the research procee, we hypothesized that there will be a large difference in the sentiment of tweets; that is, we postulate than tweets from Elon Musk will incorporate more extreme sentiments that those from Tim Cook. Throughout this report, we will check if that hypothesis is valid or not. 
+
+<h2> Methodology 2</h2>
+
+In order to investigate potential differences between the tweets of Elon Musk and Tim Cook, our methodology covered the following:
+
+
+- Comparing time patterns between the tweets of both accounts. The purpose for this was to gather information about the times of the day during which both accounts tweet the most or the least.  
+- Comparing the number of tweets with or without pictures/links from both accounts. The purpose for this was to understand which account tends to use pictures/link more often. 
+- Tokenizing the tweets in each account. The purpose for this was to identify differences between popular words tweeted between both accounts and to conduct a sentiment analysis on each sample of tweets.
+
+
+For our predictive algortihm, we divided our data into test and train data and trained the algorithm to identify the srouces of the tweet based on the following variables:
+
+
+- Whether the tweet contained pictures/links 
+- The hour of the day during which the tweet was published 
+- a sentiment score using the AFINN dictionary
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(lubridate)
+library(scales)
+library(tidytext)
+library(rpart)
+library(rpart.plot)
+library(caret)
+library(sentimentr)
+library(textdata)
+library(wordcloud)
+
 ```
+
+
+### First, we are loading in the tweets from Elon Musk and Tim Cook, our two tweeters of interest. 
+```{r}
+#load data
+setwd('~/Dropbox/516_Eels/HW_9')
+
+elon = read_csv('elonmusk_tweets.csv')
+elon$user = "Elon"
+
+cook = read_csv('tim_cook_tweets.csv')
+cook$user = "Tim"
+
+combined <- rbind(elon, cook) #combine data frames
+
+nrc <- read_rds("nrc.rds") #rds is native format for r data 
+
+---
+  
+rogan = read_csv('joerogan_tweets.csv')
+rogan$user = "Joe"
+
+siwa = read_csv('itsjojosiwa_tweets.csv')
+siwa$user = "Jojo"
+
+
+```
+
+### Here, we want to understand the differences in the times of tweets between users. 
+Tim Cook appears to tweet more often in the morning (between 7:00am - 10:00am), whereas Elon is much more likely to tweet in the very early morning / late night (12:00am - 5:00am). Tim's tweet reach a significant peak toward 9:00am, which is a sign that there are potentially scheduled tweets that go out during that time of the day. 
+**EXPLAIN THE GRAPH'S PEAKS WOULD BE AWESOME**
+```{r} 
+#time of day of tweets 
+combined %>%
+  count(user, hour = hour(with_tz(created_at, "EST"))) %>%
+  mutate(percent = n/sum(n)) %>%
+  ggplot(aes(x = hour, y = percent, color = user)) +
+  labs(title = "Percentage of tweets based on time of day", 
+       x = "Hour of day (EST)", 
+       y = "% of tweets", color = "",
+       fill = "User") + 
+  scale_y_continuous(labels = scales::percent)+
+  geom_line() + theme_bw()
+```
+
+
+### Next, we were also interested in the differences between users' tweets when it came to tweets that contained pictures/links. 
+We find that Tim Cook is much more likely to include a picture or a hyperlink in his tweets.
+**USE THE FIRST SET OF LINES OF CODE AND ARTICULATE THE EXACT NUMBERS**
+```{r}
+#  Count the number of tweets with and without picture/links by device
+pic_ct <- combined %>%
+  filter(!str_detect(text, '^"')) %>%
+  count(user,picture = ifelse(str_detect(text, "t.co"),
+                         "Picture/link", "No picture/link"))
+
+# Make a bar plot 
+ggplot(pic_ct, aes(x = user, y = n, fill = picture)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Tweets with(out) picture/link", x = "", y = "Number of tweets", fill = "") +
+  theme_bw()
+```
+
+
+### This section analyses the frequency of individual words.
+The first thing we did was create a regex pattern that removed any unwanted symbols/characters.
+```{r}
+# Create a regex pattern
+reg <- "([^A-Za-z\\d#@']|'(?![A-Za-z\\d#@]))"
+
+# Tokenize
+tweet_txt <- combined %>%
+  filter(!str_detect(text, '^"')) %>%
+  mutate(text = str_replace_all(text, "@https://t.co/[A-Za-z\\d]+|&amp;", "")) %>%
+  unnest_tokens(word, text, token = "regex", pattern = reg) %>%
+  filter(!word %in% stop_words$word,
+         str_detect(word, "[a-z]"))
+
+tweet_txt <- tweet_txt[!grepl("@", tweet_txt$word),]  #the `reg` object wasn't removing the symbols as desired
+tweet_txt <- tweet_txt[!grepl("https", tweet_txt$word),] 
+
+```
+
+
+Then, using the newly tokenized dataset, we show the words that occur most often in Elon's tweets and Tim's tweets. Unsurprisingly, Elon's most-tweeted word is `Tesla`, followed by `haha` and Tim's most-tweeted word is `Apple` and `world`. 
+```{r}
+tweet_txt %>%
+  group_by(user) %>% 
+  count(word, sort = TRUE) %>%
+  head(40) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(x = word, y = n)) +
+  geom_bar(stat = "identity", fill = "blue") + facet_wrap(~user) +
+  ylab("Occurrences") + xlab("Word") +
+  coord_flip() + theme_bw()
+
+```
+
+
+### Now, we begin our sentiment analysis. 
+We join the NRC dictionary to our data frame that contains the texts of the tweets, into a new data frame called `tweet_sentiment`. Then we assess each word and calculate a logarithmic ratio comparing the users to determine the difference. We take this log ratio, and plot it: for the words with the largest difference when it comes to being tweeted by either Elon or Tim, the top 15 are all words that coming from Elon. 
+```{r}
+#RATIO TIME
+
+#join nrc first
+tweet_sentiment <- inner_join(tweet_txt, nrc, by = "word") %>% 
+            group_by(sentiment) %>% head(10)
+
+#ratio of words and plot the ratio
+tweet_ratio <- tweet_txt %>%
+  count(word, user) %>%
+  group_by(word)  %>% 
+  filter(sum(n) >= 5) %>%
+  spread(user, n, fill = 0) %>%
+  ungroup()  %>% 
+  mutate_if(is.numeric, ~((. + 1) / sum(. + 1))) %>% 
+  mutate(logratio = log2(Elon / Tim)) %>% 
+  arrange(desc(logratio))
+
+tweet_ratio %>%
+  top_n(15, abs(logratio)) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, logratio)) %>%
+  ggplot(aes(x = word, y = logratio, fill = logratio < 0)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  ylab("Elon / Tim ratio") +
+  scale_fill_manual(name = "", labels = c("Elon", "Tim"),
+                    values = c("red", "lightblue")) #note it only has elon because the top 15 logratios are all ELon
+
+
+```
+
+#### Second, we begin assessing words by either `positive` or `negative` sentiment.
+In general, it appears that Elon's tweets have a stronger sentiment (i.e. more angry, more sad, more joyful) than Tim's tweets. 
+
+**MORE EXPLANATION/ANNOTATIONS NEEDED BY WHOEVER SAID THEY WERE WRITING! Calling out specific examples would strengthen the explanation.**
+```{r}
+
+# we can't control the dictionary
+#INDIVIDUAL SENTIMENT TIME
+tweet_sentiment <- tweet_ratio %>%
+  inner_join(nrc, by = "word") %>%
+  filter(!sentiment %in% c("positive", "negative")) %>%
+  mutate(sentiment = reorder(sentiment, -logratio),
+         word = reorder(word, -logratio)) %>%
+  group_by(sentiment) %>%
+  top_n(15, abs(logratio)) %>%
+  ungroup() 
+
+
+# Plot the log odds ratio of words by user in groups of sentiments
+ggplot(tweet_sentiment, aes(x = word, y = logratio, fill = logratio < 0)) +
+  facet_wrap(~ sentiment, scales = "free", nrow = 2) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(x = "", y = "Elon / Tim ratio") +
+  scale_fill_manual(name = "", labels = c("Elon", "Tim"),
+                    values = c("red", "lightblue"))
+
+
+```
+
+
+---
+### Algorithm to predict Elon's versus Tim's Tweets
+[DELETE THIS AFTER] a. **Develop an algorithm** that allows to predict who of the politicians tweeted using just the information in the text of the tweet and the time of the tweets. You are not allowed to use the information about the user. You can use sentiments, individual words, punctuation and anything else as a source of features.
+
+In preparation of our decision tree, we select three input variables of interest: a) whether the tweet has a picture/link, b) the time of the tweet, and c) a sentiment score using the AFINN dictionary. We've also included a word cloud, out of interest.
+```{r}
+
+#adding a 0/1 binary picture column to the "combined" data set
+predictingtree <- combined %>%
+  filter(!str_detect(text, '^"')) %>%
+  mutate(user,
+        picture = ifelse(str_detect(text, "t.co"),
+                         "Picture/link", "No picture/link")) %>% 
+  mutate(pic_binary = case_when(picture == "No picture/link" ~ 0,
+                                picture == "Picture/link" ~ 1))
+
+
+levels(predictingtree$pic_binary) <- c("0","1") #standardize levels
+#levels(tree_test$pic_binary) <- c("0","1")
+#levels(predictingtree$pic_binary) <- c("0","1")
+
+
+#adding a variable for time of day
+predictingtree <- predictingtree %>% 
+  mutate(hour = hour(with_tz(created_at, "PST")))
+
+
+#adding a variable of total sentiment of tweet
+predictingtree <- predictingtree %>%
+    unnest_tokens(word, text, token = "tweets") %>%
+    inner_join(get_sentiments("afinn")) #using afinn dictionary (sentiments range from -5 to 5)
+predictingtree
+
+predictingtree %>%
+  anti_join(stop_words) %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100))
+
+#predictingtree %>% #consult with group as to whether we want to do this method; where the individual numbers are added so the scores can extend beyond -5 or +5
+  #  left_join(sent1 %>%
+  #                group_by(id) %>%
+  #                summarise(score = sum(value))) %>%
+  #  replace_na(list(score = 0)) -> predictingtree
+
+
+
+```
+
+#### We split our data into train data, `tree_train`, and test data for later use, `tree_test`. Then, we generate a decision tree, first using `tree_train`.
+As aforementioned, we are using an algorithm to classify who the tweeter is (Elon vs. Tim) as a function of a) whether the tweet has a picture/link, b) the time of the tweet, and c) the sentiment score per the AFINN dictionary.
+
+As can be seen from the decision tree, tweets that are tweeted at 11pm, fall within the negative sentiment scale, and have a picture/link have an 80% chance of being tweet by Tim. Tweets that are tweeted before 11pm, have a negative sentiment and have no picture/link have a 42% chance of being tweeted by Elon. Additionally, more positive tweets with no picture/link have a 94% chance of being tweeted by Tim Cook. 
+```{r}
+#making train and test data
+set.seed(321)
+split = sort(sample(nrow(predictingtree), nrow(predictingtree)*.8))
+tree_train <- predictingtree[split,]
+tree_test <- predictingtree[-split,]
+
+#decision tree 
+tweet_tree <- rpart(formula = user ~ pic_binary + hour + value, 
+                   data = tree_train,
+                   method  = "class")
+
+rpart.plot(tweet_tree, yesno = 2, type = 1)
+
+```
+
+
+#### To understand the algorithm's effectiveness on *new* tweets from Elon and Tim, we use a confusion matrix on the test data.
+[DELETE THIS AFTER]b. Apply the algorithm to new tweets from both users to estimate how well the predictions work. 
+
+As can be seen from our confusion matrix, the algorithm has an overall accuracy of 82% with the current variables included. It shows higher predictability for Elon's tweets versus those of Tim. But, overall, the algorithm is very well predictive of tweets from both accounts. 
+```{r}
+#predict using test data
+tweet_predict <- predict(tweet_tree, tree_test, type = "class")
+
+#confusion matrix
+confusionMatrix(as.factor(tree_test$user), as.factor(tweet_predict))
+
+```
+
+
+### Lastly, we applied our algorithm to two completely unrelated users: Joe Rogan and Jojo Siwa. 
+c. Try the prediction algorithm with a different set of tweets from unrelated users. Discuss how the algorithm works / breaks in this case.
+We find that while the algorithm still somewhat accurately categorizes tweets for either Jojo or Joe, we do note that the accuracy of the decision tree decreases by about 7% compared to the original algorithm built using Elon and Tim's tweets.
+**SOMEONE CONT.**
+
+```{r}
+
+combined_unrelated <- rbind(rogan, siwa) #combine data frames from unrelated users
+
+other_tree <- combined_unrelated %>%
+  filter(!str_detect(text, '^"')) %>%
+  mutate(user,
+        picture = ifelse(str_detect(text, "t.co"),
+                         "Picture/link", "No picture/link")) %>% 
+  mutate(pic_binary = case_when(picture == "No picture/link" ~ 0,
+                                picture == "Picture/link" ~ 1))
+
+
+levels(other_tree$pic_binary) <- c("0","1") #standardize levels
+#levels(tree_test$pic_binary) <- c("0","1")
+#levels(predictingtree$pic_binary) <- c("0","1")
+
+
+#adding a variable for time of day
+other_tree <- other_tree %>% 
+  mutate(hour = hour(with_tz(created_at, "PST")))
+
+
+#adding a variable of total sentiment of tweet
+other_tree <- other_tree %>%
+    unnest_tokens(word, text, token = "tweets") %>%
+    inner_join(get_sentiments("afinn")) #using afinn dictionary (sentiments range from -5 to 5)
+other_tree
+
+other_tree %>%
+  anti_join(stop_words) %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100)) #fun cloud
+
+
+#Begin decision tree - split data first
+set.seed(321)
+split2 = sort(sample(nrow(other_tree), nrow(other_tree)*.8))
+other_train <- other_tree[split,]
+other_test <- other_tree[-split,]
+
+#decision tree 
+other_decisiontree <- rpart(formula = user ~ pic_binary + hour + value, 
+                   data = other_train,
+                   method  = "class")
+
+rpart.plot(other_decisiontree, yesno = 2, type = 1)
+
+
+
+#confusion matrix
+tweet_predict2 <- predict(other_decisiontree, other_test, type = "class")
+
+confusionMatrix(as.factor(other_test$user), as.factor(tweet_predict2))
+
+#.76
+
+```
+
+
+<h2> Results 2</h2>
+While we have also provided explanations at each code chunk, the general results/takeaways are as follows:
+
+- Tim Cook tweets more using pictures/links than Elon Musk.
+- Tim Cook appears to tweet more often in the morning (between 7:00am - 10:00am), whereas Elon is much more likely to tweet in the very early morning / late night (12:00am - 5:00am). Tim's tweet reach a significant peak toward 9:00am, which is a sign that there are potentially scheduled tweets that go out during that time of the day. .
+- Elon Musk's tweets are more informal than those of Tim Cook. Aside from Telsa, the most popular word in Elon's tweets is "haha". The most popular words in Tim's tweets are `Apple` and `world`. 
+- For the words with the largest difference when it comes to being tweeted by either Elon or Tim, the top 15 are all words that are coming from Elon (***What does this mean concretely?***)
+- Something around sentiments (***I am not sure how to interpret***)
+- The algorithm that we developed using time and content of the tweets is able to differential with 82% accuracy tweets from Elon Musk and Tim Cook. (***something about Joe rogan and jojosiwa***)
+
+
+
+<h2> Conclusion and necessary attributions. 2</h2> 
+
+***Something about Elon Musk's tweets versus those of Tim Cook***
+
+---
+
+Extract tweets from two famous people who are reasonably different from each other in their views / speech patterns etc. Comparing two of the Kardashians might be tough, but comparing Joe Biden and Kim Kardashian might be more feasible. Ideally you would want a less silly comparison. Two political candidates with opposing views is probably more interesting. You can also try and compare two scientists, two activists, or two celebrities, but try and make this comparison interesting in some way and try to not be disparaging / condescending. We are not trying to develop an algorithm to shame people, after all, they can most definitely do it without our help themselves most of the time.
+
+a. **Develop an algorithm** that allows to predict who of the politicians tweeted using just the information in the text of the tweet and the time of the tweets. You are not allowed to use the information about the user. You can use sentiments, individual words, punctuation and anything else as a source of features.
+
+b. Apply the algorithm to new tweets from both users to estimate how well the predictions work. TO DO: Apply algorithm to test data 
+
+c. Try the prediction algorithm with a different set of tweets from unrelated users. Discuss how the algorithm works / breaks in this case. TO DO: Use on Joe Rogan data and someone else 
+
+a.-c. is group work. 
+
+d. THIS IS INDIVIDUAL WORK: Present the findings in a website form. Your submission should be just the website link. Make sure you acknowledge the contributions of your team members.
+
+
+
+
+
+
 

@@ -1,13 +1,11 @@
 ---
-title: "My cat."
-author: "Something fun to look at, before you look at some hundreds lines of code."
+title: "Welcome!"
+author: " "
 output: html_document
 ---
 
-```{r figurename, echo=FALSE, fig.cap="Ace.", out.width = '90%'}
-knitr::include_graphics("/Users/jenniferxue/Documents/Ace.png")
-```
+Thanks for stopping by. :-) 
 
-
+Please browse the "Project" and "About" tabs for more information.
 
 

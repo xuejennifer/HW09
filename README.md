@@ -1,4 +1,4 @@
-# Report topic
+# Repository Topic
 
 In this report, we analyze Elon Musk's and Tim Cook's tweets.
 

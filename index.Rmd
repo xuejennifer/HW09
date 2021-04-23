@@ -4,6 +4,6 @@ author: "Something fun to look at, before you look at some hundreds lines of cod
 output: html_document
 ---
 
-![](/Users/jenniferxue/Desktop/Ace.png)
+![Ace](/Users/jenniferxue/Documents/Ace.png)
 
 

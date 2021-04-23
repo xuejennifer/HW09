@@ -1,9 +1,13 @@
 ---
-title: "My cat"
+title: "My cat."
 author: "Something fun to look at, before you look at some hundreds lines of code."
 output: html_document
 ---
 
-![Ace](/Users/jenniferxue/Documents/Ace.png)
+```{r figurename, echo=FALSE, fig.cap="Ace.", out.width = '90%'}
+knitr::include_graphics("/Users/jenniferxue/Documents/Ace.png")
+```
+
+
 
 

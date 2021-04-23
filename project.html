@@ -9,7 +9,6 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Electric Eels: Walid Hedidar, Aamia Malik, Michael Murphy, Jon Sirota, Cory Winkler, Jennifer Xue" />
 
 
 <title>The Twitter Analysis: Elon Musk and Tim Cook</title>
@@ -305,14 +304,11 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">The Twitter Analysis: Elon Musk and Tim Cook</h1>
-<h4 class="author">Electric Eels: Walid Hedidar, Aamia Malik, Michael Murphy, Jon Sirota, Cory Winkler, Jennifer Xue</h4>
 <h4 class="date">BDS-516 HW09 | April 25, 2021</h4>
 
 </div>
 
 
-<div id="in-this-report-we-analyze-elon-musks-and-tim-cooks-tweets." class="section level2">
-<h2>In this report, we analyze Elon Musk’s and Tim Cook’s tweets.</h2>
 <h2>
 Introduction
 </h2>
@@ -547,6 +543,8 @@ predictingtree %&gt;%
 <pre><code>## Joining, by = &quot;word&quot;</code></pre>
 <pre><code>## Warning in wordcloud(word, n, max.words = 100): happy could not be fit on page.
 ## It will not be plotted.</code></pre>
+<pre><code>## Warning in wordcloud(word, n, max.words = 100): celebrating could not be fit on
+## page. It will not be plotted.</code></pre>
 <p><img src="project_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <div id="we-split-our-data-into-train-data-tree_train-and-test-data-for-later-use-tree_test.-then-we-generate-a-decision-tree-first-using-tree_train." class="section level4">
 <h4>We split our data into train data, <code>tree_train</code>, and test data for later use, <code>tree_test</code>. Then, we generate a decision tree, first using <code>tree_train</code>.</h4>
@@ -601,7 +599,6 @@ confusionMatrix(as.factor(tree_test$user), as.factor(tweet_predict))</code></pre
 ##                                           
 ##        &#39;Positive&#39; Class : Elon            
 ## </code></pre>
-</div>
 </div>
 </div>
 <div id="lastly-we-applied-our-algorithm-to-two-completely-unrelated-users-joe-rogan-and-jojo-siwa." class="section level2">

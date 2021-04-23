@@ -1,11 +1,8 @@
 ---
 title: "The Twitter Analysis: Elon Musk and Tim Cook"
-author: "Electric Eels: Walid Hedidar, Aamia Malik, Michael Murphy, Jon Sirota, Cory Winkler, Jennifer Xue"
 date: "BDS-516 HW09 | April 25, 2021"
 output: html_document
 ---
-
-## In this report, we analyze Elon Musk's and Tim Cook's tweets.
 
 <h2> Introduction </h2>
 For this assignment, we are interested in the comparing tweets from **Elon Musk** and **Tim Cook**. Our main research question is the following: *How do tweets from Elon Musk and Tim Cook differ?*. Before starting the research process, we hypothesize that there would be a large difference in the sentiment of tweets; that is, we postulate that tweets from Elon will contain more extreme sentiments than those from Tim. Additionally, we expect that Elon may have more tweets with pictures while also tweeting at more sproradic and unconventional times of the day in comparison to Tim.

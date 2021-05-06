@@ -286,7 +286,7 @@ $(document).ready(function () {
   <a href="index.html">Home</a>
 </li>
 <li>
-  <a href="project.html">Project</a>
+  <a href="project.html">Project: HW09</a>
 </li>
 <li>
   <a href="about.html">About</a>
@@ -509,9 +509,6 @@ levels(predictingtree$pic_binary) &lt;- c(&quot;0&quot;,&quot;1&quot;)
 #adding a variable for time of day
 predictingtree &lt;- predictingtree %&gt;% 
   mutate(hour = hour(with_tz(created_at, &quot;PST&quot;)))</code></pre>
-<pre><code>## Warning: Problem with `mutate()` input `hour`.
-## ℹ unknown timezone &#39;PST&#39;
-## ℹ Input `hour` is `hour(with_tz(created_at, &quot;PST&quot;))`.</code></pre>
 <pre><code>## Warning in as.POSIXlt.POSIXct(x, tz = tz(x)): unknown timezone &#39;PST&#39;</code></pre>
 <pre class="r"><code>#adding a variable of total sentiment of tweet
 predictingtree &lt;- predictingtree %&gt;%
@@ -541,10 +538,8 @@ predictingtree %&gt;%
   count(word) %&gt;%
   with(wordcloud(word, n, max.words = 100))</code></pre>
 <pre><code>## Joining, by = &quot;word&quot;</code></pre>
-<pre><code>## Warning in wordcloud(word, n, max.words = 100): celebrate could not be fit on
-## page. It will not be plotted.</code></pre>
-<pre><code>## Warning in wordcloud(word, n, max.words = 100): support could not be fit on
-## page. It will not be plotted.</code></pre>
+<pre><code>## Warning in wordcloud(word, n, max.words = 100): congratulations could not be fit
+## on page. It will not be plotted.</code></pre>
 <p><img src="project_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <div id="we-split-our-data-into-train-data-tree_train-and-test-data-for-later-use-tree_test.-then-we-generate-a-decision-tree-first-using-tree_train." class="section level4">
 <h4>We split our data into train data, <code>tree_train</code>, and test data for later use, <code>tree_test</code>. Then, we generate a decision tree, first using <code>tree_train</code>.</h4>
@@ -652,9 +647,6 @@ levels(other_tree$pic_binary) &lt;- c(&quot;0&quot;,&quot;1&quot;)
 #adding a variable for time of day
 other_tree &lt;- other_tree %&gt;% 
   mutate(hour = hour(with_tz(created_at, &quot;PST&quot;)))</code></pre>
-<pre><code>## Warning: Problem with `mutate()` input `hour`.
-## ℹ unknown timezone &#39;PST&#39;
-## ℹ Input `hour` is `hour(with_tz(created_at, &quot;PST&quot;))`.</code></pre>
 <pre><code>## Warning in as.POSIXlt.POSIXct(x, tz = tz(x)): unknown timezone &#39;PST&#39;</code></pre>
 <pre class="r"><code>#adding a variable of total sentiment of tweet
 other_tree &lt;- other_tree %&gt;%
